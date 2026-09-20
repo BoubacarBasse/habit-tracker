@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Habit Tracker</title>
-  <meta name="description" content="A simple habit tracker: add habits, check them off daily, and build streaks. Works offline." />
+  <meta name="description" content="A two-person habit tracker: your habits, their habits, and shared habits you both have to check off." />
   <meta name="theme-color" content="#4f46e5" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -15,26 +15,21 @@
 </head>
 <body>
   <div id="picker" class="picker" hidden></div>
-  <main class="app" id="habits" hidden>
+  <div id="app" class="app" hidden>
     <header class="app-head">
-      <h1 id="who-title">Habit Tracker</h1>
-      <button type="button" id="switch" class="ghost">Switch person</button>
+      <h1 id="who-title" tabindex="-1">Habit Tracker</h1>
     </header>
-    <form id="add-form" class="add-form" novalidate>
-      <label for="habit-name">New habit</label>
-      <div class="row">
-        <input id="habit-name" name="name" type="text" maxlength="60" autocomplete="off" placeholder="e.g. Drink water" aria-describedby="form-error" />
-        <button type="submit">Add</button>
-      </div>
-      <p id="form-error" class="error" role="alert"></p>
-    </form>
-    <section aria-labelledby="list-heading">
-      <h2 id="list-heading">Today</h2>
-      <p id="empty" class="empty" hidden>No habits yet. Add your first one above.</p>
-      <ul id="habit-list" class="habit-list"></ul>
-    </section>
+    <p id="banner" class="banner" role="alert" hidden></p>
+    <section id="nudges" class="nudges" aria-label="Nudges" hidden></section>
+    <main id="view"></main>
+    <nav id="tabbar" class="tabbar" aria-label="Sections">
+      <button type="button" data-tab="me">Me</button>
+      <button type="button" data-tab="shared">Shared</button>
+      <button type="button" data-tab="partner" id="partner-tab">Partner</button>
+      <button type="button" id="switch">Switch</button>
+    </nav>
     <p id="status" class="sr-only" aria-live="polite"></p>
-  </main>
+  </div>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

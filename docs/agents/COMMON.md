@@ -1,7 +1,0 @@
-# Rules for every chat (all chats share ONE folder: Multi_agent_workflow, branch main)
-1. Read PLAN.md, BOARD.md and your own file in docs/agents/ first. Edit ONLY the files you own (ownership list in PLAN.md). Never edit another chat's files; if you need a change there, write it under "Requests" in BOARD.md.
-2. Other chats are editing the same folder at the same time. Before relying on a file you do not own, check BOARD.md for its status. Expect files from other chats to be half-finished. If npm test or npm run build fails because of someone else's file, do not fix it: note it in BOARD.md and carry on.
-3. Commit only your own files: `git add <your files>` then `git commit`. Never `git add -A`, never `git stash`, never `git reset`, never `git checkout` on files you do not own. If git reports an index.lock, wait a few seconds and retry. Do NOT push; the Planner pushes.
-4. Check in: update your row in BOARD.md at the start, after each major step, and when done (status + one line). If you need a decision from Boubacar, ask him directly in your chat and also note it under "Questions for Boubacar". Do not guess on anything that affects design, data, or security.
-5. Be token-efficient: do not re-read files you have not changed, and do not explore outside your ownership.
-6. When done: set your status to "done" in BOARD.md and end with a 3-line summary Boubacar can paste to the Planner chat.
