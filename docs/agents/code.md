@@ -1,9 +1,10 @@
 # code agent (also read COMMON.md)
-Role: everything behind the screens: database, project plumbing, app logic, tests. Suggested model: Sonnet.
-You own the files of three earlier roles. Do them IN THIS ORDER, and read the matching file for the details of each:
-1. Data + security -> docs/agents/data-security.md (Supabase schema, access rules, docs/DATA.md). STOP and ask Boubacar before touching any Supabase project that already holds unrelated data, and before applying a migration to a remote project.
-2. Structure -> docs/agents/structure.md (dependency, supabaseClient.js, netlify.toml CSP, service worker, README).
-3. Logic -> docs/agents/logic.md (src/store.js, src/streaks.js, tests).
-Files you own: supabase/migrations/*, docs/DATA.md, package.json, vite.config.js, netlify.toml, .env.example, .gitignore, src/supabaseClient.js, src/store.js, src/streaks.js, public/sw.js, public/manifest.webmanifest, README.md, tests/*.
-Do NOT edit: index.html, src/main.js, src/views/*, src/style.css, public/characters/*, public/icon.svg (UI/UX chat owns them). The UI/UX chat codes against the store.js contract in PLAN.md, so keep to it exactly, and if you must change it, tell the Planner first.
-Where those role files say "the structure agent" or "the UX agent", that is now the code chat and the UI/UX chat.
+Role: project plumbing and application logic, plus tests. Suggested model: Sonnet.
+The database and its security belong to a separate data-security chat that will start later. Do not touch Supabase or supabase/*.
+Do these IN THIS ORDER, and read the matching file for details:
+1. Structure -> docs/agents/structure.md (dependency, supabaseClient.js, netlify.toml CSP, service worker, README).
+2. Logic -> docs/agents/logic.md (src/store.js, src/streaks.js, tests). The database may not exist yet, so build and test against the fake client from setClient(); write the exact tables/columns you query in BOARD.md under "Requests" as "code -> data-security" so the data chat builds the schema you need. Follow the data model in PLAN.md.
+Files you own: package.json, vite.config.js, netlify.toml, .env.example, .gitignore, src/supabaseClient.js, src/store.js, src/streaks.js, public/sw.js, public/manifest.webmanifest, README.md, tests/*.
+Do NOT edit: index.html, src/main.js, src/views/*, src/style.css, public/characters/*, public/icon.svg (UI/UX chat), supabase/*, docs/DATA.md (data-security chat).
+The UI/UX chat codes against the store.js contract in PLAN.md, so keep to it exactly. If you must change it, tell the Planner first.
+Where the role files say "the structure agent", "the UX agent" or "the data-security agent", those are now the code chat, the UI/UX chat and the data-security chat.

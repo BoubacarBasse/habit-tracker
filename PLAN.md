@@ -31,13 +31,15 @@ Errors: functions throw Error with a user-readable message; network failure mess
 src/supabaseClient.js (owned by structure): exports `supabase`, reads import.meta.env.VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
 
 ## File ownership (edit ONLY your own files; all chats share one folder on main)
-- code chat (data + structure + logic): supabase/migrations/*, docs/DATA.md, package.json, vite.config.js, netlify.toml, .env.example, .gitignore, src/supabaseClient.js, src/store.js, src/streaks.js, public/sw.js, public/manifest.webmanifest, README.md, tests/*
+- code chat (structure + logic): package.json, vite.config.js, netlify.toml, .env.example, .gitignore, src/supabaseClient.js, src/store.js, src/streaks.js, public/sw.js, public/manifest.webmanifest, README.md, tests/*
+- data-security chat (starts later): supabase/migrations/*, docs/DATA.md
 - ux chat:        index.html, src/main.js, src/views/*, src/style.css, public/characters/*, public/icon.svg
 - planner (this chat): PLAN.md, BOARD.md, docs/agents/*, pushing to GitHub, Netlify env vars
 - reviewer (Wave 3, read-only)
 
 ## Waves
-Wave 1 (parallel): code chat, ux chat. Coordinate through BOARD.md.
+Wave 1 (parallel): code chat, ux chat. Coordinate through BOARD.md. Code builds against a fake client, UX against a fake store.
+Wave 1b: data-security chat (opened by Boubacar when ready) builds the schema and access rules from the data model and code's requests.
 Wave 2: planner integration check (build + tests), Netlify env vars, push.
 Wave 3: reviewer (read-only), fixes by the owning chat, deploy.
 
