@@ -1,6 +1,10 @@
 -- Habit Tracker: shared database for Boubacar & Nawel.
 -- Run this ONCE in Supabase: SQL Editor -> New query -> paste -> Run.
 --
+-- Habits are either personal (owner = 'boubacar' or 'nawel') or shared (owner = 'both').
+-- Every check-in records WHO checked it. A shared habit counts as done for a day only when
+-- BOTH people have a check-in for that day.
+--
 -- There is no login. The app uses the public "anon" key, so anyone who has that key can do
 -- exactly what the policies below allow (read everything, add/delete habits and check-ins,
 -- send nudges, mark nudges read). The checks below limit the damage; they cannot make the
@@ -9,7 +13,7 @@
 -- ---------------------------------------------------------------- tables
 create table public.habits (
   id         uuid primary key default gen_random_uuid(),
-  owner      text not null check (owner in ('boubacar', 'nawel')),
+  owner      text not null check (owner in ('boubacar', 'nawel', 'both')),
   name       text not null check (char_length(btrim(name)) between 1 and 60),
   created_at timestamptz not null default now()
 );
@@ -17,9 +21,10 @@ create index habits_owner_idx on public.habits (owner);
 
 create table public.checkins (
   habit_id   uuid not null references public.habits (id) on delete cascade,
+  owner      text not null check (owner in ('boubacar', 'nawel')),  -- who checked it
   day        date not null,
   created_at timestamptz not null default now(),
-  primary key (habit_id, day)
+  primary key (habit_id, owner, day)
 );
 
 create table public.nudges (
@@ -37,6 +42,7 @@ create index nudges_to_idx on public.nudges (to_owner, read);
 create function public.habits_guard() returns trigger
 language plpgsql set search_path = '' as $$
 begin
+  -- 30 per list: Boubacar's, Nawel's, and the shared list.
   if (select count(*) from public.habits where owner = new.owner) >= 30 then
     raise exception 'That is a lot of habits. Delete one first.';
   end if;
@@ -47,10 +53,20 @@ create trigger habits_guard before insert on public.habits
 
 create function public.checkins_guard() returns trigger
 language plpgsql set search_path = '' as $$
+declare
+  habit_owner text;
 begin
-  -- +1 / -7 days of slack covers time zones and a short catch-up window.
+  -- Only today, a few days back, or (for time zones) one day ahead.
   if new.day > current_date + 1 or new.day < current_date - 7 then
     raise exception 'That date is out of range.';
+  end if;
+  -- A personal habit can only be checked by its owner; a shared one by either person.
+  select owner into habit_owner from public.habits where id = new.habit_id;
+  if habit_owner is null then
+    raise exception 'That habit does not exist.';
+  end if;
+  if habit_owner <> 'both' and habit_owner <> new.owner then
+    raise exception 'That habit belongs to someone else.';
   end if;
   return new;
 end $$;
