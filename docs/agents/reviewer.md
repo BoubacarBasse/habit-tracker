@@ -1,0 +1,2 @@
+# reviewer agent (also read COMMON.md) - READ-ONLY, Wave 3, start only when the Planner says so
+Review the merged main branch for correctness bugs, XSS, accessibility, service worker problems, Supabase RLS gaps (test what the anon key can actually do), CSP mistakes that would break the deployed app, and mobile layout issues. Report at most 10 findings with file:line and a one-line fix, most severe first. Do not edit files.
