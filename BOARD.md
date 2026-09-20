@@ -1,16 +1,19 @@
-# BOARD - shared status (every agent updates ONLY its own row + the Questions section)
+# BOARD - shared status (every chat updates ONLY its own row, Requests and Questions)
 
-| Agent | Branch | Status | Last update | Notes |
-|---|---|---|---|---|
-| data-security | data-security | not started | | |
-| structure | structure | not started | | |
-| logic | logic | not started | | |
-| ux | ux | not started | | |
-| reviewer | (main) | not started | | |
+| Chat | Status | Last update | Notes |
+|---|---|---|---|
+| planner | active | | |
+| code (data + structure + logic) | not started | | |
+| ux | not started | | |
+| reviewer | not started (Wave 3) | | |
 
-## Questions for Boubacar (agents: add here, tag with your name. Planner clears them.)
+## Requests between chats (format: FROM -> TO: what you need. Owner clears when done.)
+- (none yet)
+
+## Questions for Boubacar (tag with your chat name. Planner clears them.)
 - (none yet)
 
 ## Decisions log
 - Auth: none. Character picker only. (Boubacar)
-- Backend: Supabase. Project chosen by data-security after inspecting what exists.
+- Backend: Supabase. Project chosen by the code chat after inspecting what exists.
+- Chats: Planner, UI/UX, Code. All work in the same folder on main with file ownership. Shared BOARD.md. (Boubacar)

@@ -30,17 +30,16 @@ src/streaks.js (pure, sync): todayKey(now?), isDone(habit, date?), getStreak(hab
 Errors: functions throw Error with a user-readable message; network failure message: "Can't reach the server. Check your connection."
 src/supabaseClient.js (owned by structure): exports `supabase`, reads import.meta.env.VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
 
-## File ownership (edit ONLY your own files)
-- structure:      package.json, vite.config.js, netlify.toml, .env.example, .gitignore, src/supabaseClient.js, public/sw.js, public/manifest.webmanifest, README.md
-- data-security:  supabase/migrations/*.sql, docs/DATA.md
-- logic:          src/store.js, src/streaks.js, tests/*
-- ux:             index.html, src/main.js, src/views/*, src/style.css, public/characters/*, public/icon.svg
-- planner (main): PLAN.md, BOARD.md, docs/agents/*, merging
+## File ownership (edit ONLY your own files; all chats share one folder on main)
+- code chat (data + structure + logic): supabase/migrations/*, docs/DATA.md, package.json, vite.config.js, netlify.toml, .env.example, .gitignore, src/supabaseClient.js, src/store.js, src/streaks.js, public/sw.js, public/manifest.webmanifest, README.md, tests/*
+- ux chat:        index.html, src/main.js, src/views/*, src/style.css, public/characters/*, public/icon.svg
+- planner (this chat): PLAN.md, BOARD.md, docs/agents/*, pushing to GitHub, Netlify env vars
+- reviewer (Wave 3, read-only)
 
 ## Waves
-Wave 1 (parallel): data-security, structure, logic, ux.
-Wave 2: planner merges branches, sets Netlify env vars, integration test.
-Wave 3: reviewer (read-only), fixes, deploy.
+Wave 1 (parallel): code chat, ux chat. Coordinate through BOARD.md.
+Wave 2: planner integration check (build + tests), Netlify env vars, push.
+Wave 3: reviewer (read-only), fixes by the owning chat, deploy.
 
 ## Screens (ux)
 1. Picker: two large character cards. Tap = go to that profile. Small animation on tap / swipe over the image.
