@@ -1,4 +1,10 @@
-import { getHabits, addHabit, deleteHabit, toggleDay, isDone, getStreak } from './store.js';
+import { getHabits, addHabit, deleteHabit, toggleDay, isDone, getStreak, setOwner } from './store.js';
+import { showPicker } from './views/picker.js';
+
+const WHO_KEY = 'ht:who';
+const NAMES = { boubacar: 'Boubacar', nawel: 'Nawel' };
+let owner = null;
+let closePicker = null;
 
 const form = document.getElementById('add-form');
 const input = document.getElementById('habit-name');
@@ -6,6 +12,9 @@ const errorEl = document.getElementById('form-error');
 const list = document.getElementById('habit-list');
 const empty = document.getElementById('empty');
 const status = document.getElementById('status');
+const pickerEl = document.getElementById('picker');
+const habitsEl = document.getElementById('habits');
+const title = document.getElementById('who-title');
 
 function announce(msg) {
   status.textContent = '';
@@ -78,11 +87,42 @@ form.addEventListener('submit', (e) => {
   }
 });
 
-render();
+function showHabits(who) {
+  owner = who;
+  setOwner(who);
+  try { localStorage.setItem(WHO_KEY, who); } catch { /* private mode */ }
+  document.body.classList.remove('picking');
+  pickerEl.hidden = true;
+  habitsEl.hidden = false;
+  title.textContent = `${NAMES[who]}'s habits`;
+  document.title = `${NAMES[who]}'s habits`;
+  render();
+  title.setAttribute('tabindex', '-1');
+  title.focus();
+}
+
+function showCharacterSelect(moveFocus = false) {
+  owner = null;
+  try { localStorage.removeItem(WHO_KEY); } catch { /* private mode */ }
+  habitsEl.hidden = true;
+  pickerEl.hidden = false;
+  document.body.classList.add('picking');
+  document.title = 'Habit Tracker';
+  if (closePicker) closePicker();
+  closePicker = showPicker(pickerEl, showHabits);
+  if (moveFocus) pickerEl.querySelector('.char-card')?.focus();
+}
+
+document.getElementById('switch').addEventListener('click', () => showCharacterSelect(true));
+
+let saved = null;
+try { saved = localStorage.getItem(WHO_KEY); } catch { /* private mode */ }
+if (saved && NAMES[saved]) showHabits(saved);
+else showCharacterSelect();
 
 // Refresh "today" state if the tab was left open across midnight.
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) render();
+  if (!document.hidden && owner) render();
 });
 
 if ('serviceWorker' in navigator) {

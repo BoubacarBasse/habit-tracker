@@ -8,11 +8,18 @@
   <meta name="theme-color" content="#4f46e5" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
-  <main class="app">
-    <h1>Habit Tracker</h1>
+  <div id="picker" class="picker" hidden></div>
+  <main class="app" id="habits" hidden>
+    <header class="app-head">
+      <h1 id="who-title">Habit Tracker</h1>
+      <button type="button" id="switch" class="ghost">Switch person</button>
+    </header>
     <form id="add-form" class="add-form" novalidate>
       <label for="habit-name">New habit</label>
       <div class="row">

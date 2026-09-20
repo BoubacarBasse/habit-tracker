@@ -1,5 +1,10 @@
-const KEY = 'habit-tracker:v1';
+let KEY = 'habit-tracker:v1';
 const MAX_NAME = 60;
+
+// Each person gets their own list. Temporary until habits move to the shared database.
+export function setOwner(owner) {
+  KEY = `habit-tracker:v1:${owner}`;
+}
 
 function load() {
   try {
