@@ -1,0 +1,18 @@
+<svg viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="96" cy="96" r="96" fill="#4f46e5"/>
+
+  <!-- Calendar/Grid pattern -->
+  <rect x="48" y="48" width="96" height="96" rx="12" fill="none" stroke="white" stroke-width="6"/>
+
+  <!-- Horizontal lines for calendar appearance -->
+  <line x1="48" y1="72" x2="144" y2="72" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <line x1="48" y1="96" x2="144" y2="96" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <line x1="48" y1="120" x2="144" y2="120" stroke="white" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Checkmark in bottom right -->
+  <g transform="translate(110, 110)">
+    <circle cx="0" cy="0" r="18" fill="white"/>
+    <path d="M -8 0 L -2 6 L 8 -6" stroke="#4f46e5" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

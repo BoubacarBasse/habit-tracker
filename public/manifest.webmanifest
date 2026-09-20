@@ -1,0 +1,19 @@
+{
+  "name": "Habit Tracker",
+  "short_name": "Habits",
+  "description": "A simple offline-first habit tracking app",
+  "id": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

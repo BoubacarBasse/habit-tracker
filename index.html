@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Habit Tracker</title>
+  <meta name="description" content="A simple habit tracker: add habits, check them off daily, and build streaks. Works offline." />
+  <meta name="theme-color" content="#4f46e5" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <main class="app">
+    <h1>Habit Tracker</h1>
+    <form id="add-form" class="add-form" novalidate>
+      <label for="habit-name">New habit</label>
+      <div class="row">
+        <input id="habit-name" name="name" type="text" maxlength="60" autocomplete="off" placeholder="e.g. Drink water" aria-describedby="form-error" />
+        <button type="submit">Add</button>
+      </div>
+      <p id="form-error" class="error" role="alert"></p>
+    </form>
+    <section aria-labelledby="list-heading">
+      <h2 id="list-heading">Today</h2>
+      <p id="empty" class="empty" hidden>No habits yet. Add your first one above.</p>
+      <ul id="habit-list" class="habit-list"></ul>
+    </section>
+    <p id="status" class="sr-only" aria-live="polite"></p>
+  </main>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

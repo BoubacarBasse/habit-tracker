@@ -1,0 +1,68 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --text: #1a1c23;
+  --muted: #5b6070;
+  --border: #d5d8e2;
+  --accent: #4f46e5;
+  --accent-text: #ffffff;
+  --danger: #b42318;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --text: #eceef5;
+    --muted: #a0a5b8;
+    --border: #343849;
+    --accent: #8b85ff;
+    --accent-text: #0f1117;
+    --danger: #ff8a80;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.app { max-width: 36rem; margin: 0 auto; padding: 1rem; }
+h1 { font-size: 1.75rem; margin: 1rem 0; }
+h2 { font-size: 1.15rem; margin: 1.5rem 0 .5rem; }
+.add-form label { display: block; font-weight: 600; margin-bottom: .25rem; }
+.row { display: flex; gap: .5rem; }
+input[type="text"] {
+  flex: 1; min-width: 0; padding: .6rem .75rem; font: inherit;
+  color: var(--text); background: var(--card);
+  border: 1px solid var(--border); border-radius: .5rem;
+}
+button {
+  font: inherit; cursor: pointer; padding: .6rem 1rem; border-radius: .5rem;
+  border: 1px solid var(--accent); background: var(--accent); color: var(--accent-text);
+}
+button.delete {
+  background: transparent; color: var(--danger); border-color: var(--border);
+  padding: .4rem .7rem;
+}
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.error { color: var(--danger); min-height: 1.5em; margin: .25rem 0 0; }
+.empty { color: var(--muted); }
+.habit-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.habit {
+  display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: .5rem; padding: .75rem;
+}
+.habit input[type="checkbox"] { width: 1.4rem; height: 1.4rem; accent-color: var(--accent); flex: none; }
+.habit label { flex: 1; min-width: 6rem; overflow-wrap: anywhere; }
+.streak { color: var(--muted); font-size: .9rem; white-space: nowrap; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  button { transition: opacity .15s; }
+  button:hover { opacity: .85; }
+}
