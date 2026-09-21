@@ -12,7 +12,7 @@ const REFRESH_MS = 30000;
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const REMINDERS_ENABLED = false; // flip on once the text-message sender is deployed
+const REMINDERS_ENABLED = true;
 const EDIT_BACK_DAYS = 7; // the database only accepts check-ins this far back
 const $ = (id) => document.getElementById(id);
 
@@ -498,7 +498,7 @@ function buildReminders() {
   try { last4 = localStorage.getItem(PHONE_KEY + owner); } catch { /* private mode */ }
   const box = el('details', 'reminders');
   const summary = el('summary', null, last4 ? `Text reminders: on (•••• ${last4})` : 'Text reminders: off');
-  const note = el('p', 'muted', 'Get a text each morning with what is on your list today. Your number is stored privately and cannot be read back, so type it again to change it.');
+  const note = el('p', 'muted', 'Get a text around 8am with what is on your list today, and when your partner nudges you. Your number is stored privately and cannot be read back, so type it again to change it.');
   const form = el('form', 'phone-form');
   form.noValidate = true;
   const label = el('label', null, 'Mobile number');
@@ -537,7 +537,7 @@ function buildReminders() {
       const phone = await savePhone(owner, value);
       remember(phone ? phone.slice(-4) : null);
       input.value = '';
-      msg.textContent = phone ? 'Saved. You will get a text each morning.' : 'Reminders are off.';
+      msg.textContent = phone ? 'Saved. You will get a text around 8am and when nudged.' : 'Reminders are off.';
       msg.classList.add('ok');
     } catch (err) {
       msg.textContent = err.message;

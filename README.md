@@ -31,7 +31,7 @@ Get the two values from Supabase: Project Settings, then API. Use the anon (publ
 never the service_role key.
 
 ## Set up the database
-Run `supabase/migrations/0001_init.sql`, then `supabase/migrations/0002_schedule_and_phone.sql`, once each in Supabase (SQL Editor, New query, paste, Run). The second adds weekly schedules and a private table for phone numbers (text reminders are not switched on yet).
+Run `supabase/migrations/0001_init.sql`, then `supabase/migrations/0002_schedule_and_phone.sql`, once each in Supabase (SQL Editor, New query, paste, Run). The second adds weekly schedules and a private table for phone numbers (the third, `0003_reminder_log.sql`, plus `setup_reminders.sql`, turn on text reminders through Twilio).
 
 ## Deploy (Netlify)
 Build command `npm run build`, publish directory `dist` (already in `netlify.toml`). Set the
