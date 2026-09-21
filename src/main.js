@@ -4,6 +4,7 @@ import {
 } from './store.js';
 import { todayKey, shift, getStreak, isScheduled, ALL_WEEK } from './streaks.js';
 import { showPicker } from './views/picker.js';
+import { drawSprite } from './views/characters.js';
 import { renderMonth, dayItems, monthStart, addMonths, monthLabel, dayLabel } from './views/calendar.js';
 
 const WHO_KEY = 'ht:who';
@@ -12,6 +13,7 @@ const REFRESH_MS = 30000;
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const SPRITES = { boubacar: 'man', nawel: 'woman' };
 const REMINDERS_ENABLED = true;
 const EDIT_BACK_DAYS = 7; // the database only accepts check-ins this far back
 const $ = (id) => document.getElementById(id);
@@ -30,6 +32,8 @@ let tab = 'me'; // 'me' | 'shared' | 'calendar' | 'partner'
 let calMonth = monthStart(todayKey());
 let calDay = todayKey();
 let editingId = null; // habit whose weekdays are being edited
+let enter = true; // play the entrance animation on the next paint of real data
+const lastFrac = {}; // progress-ring position per tab, so the ring animates from where it was
 let offOpen = false; // is "Not scheduled today" expanded
 let board = null; // last data from the server
 let nudges = [];
@@ -106,6 +110,7 @@ async function refresh() {
 async function toggle(habit, checked, day = todayKey()) {
   replaceHabit(applyCheck(habit, me, day, checked));
   renderList();
+  if (checked) document.getElementById(`hc-${habit.id}`)?.closest('.habit')?.classList.add('just-done');
   announce(`${habit.name} ${checked ? 'checked' : 'unchecked'} for ${day === todayKey() ? 'today' : dayLabel(day)}`);
   try {
     await setChecked(habit.id, me, checked, day);
@@ -263,6 +268,45 @@ function dayEditor(habit) {
   return box;
 }
 
+function streakEl(habit) {
+  const n = getStreak(habit);
+  return el('span', 'streak' + (n > 0 ? ' hot' : ''), streakText(n));
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs) {
+  const e = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  return e;
+}
+
+// Summary card: a progress ring plus a short line. The ring animates from its last position.
+function heroCard(key, done, total, title, sub) {
+  const R = 46;
+  const C = 2 * Math.PI * R;
+  const frac = total ? done / total : 0;
+  const prev = lastFrac[key] ?? 0;
+  lastFrac[key] = frac;
+  const box = el('div', 'hero');
+  const ring = el('div', 'ring');
+  const svg = svgEl('svg', { viewBox: '0 0 110 110', 'aria-hidden': 'true' });
+  const defs = svgEl('defs', {});
+  const grad = svgEl('linearGradient', { id: 'ringGrad', x1: '0', y1: '0', x2: '1', y2: '1' });
+  grad.append(svgEl('stop', { offset: '0', 'stop-color': '#ff7a3d' }), svgEl('stop', { offset: '1', 'stop-color': '#ffb02e' }));
+  defs.append(grad);
+  const bg = svgEl('circle', { class: 'ring-bg', cx: '55', cy: '55', r: String(R) });
+  const fg = svgEl('circle', { class: 'ring-fg', cx: '55', cy: '55', r: String(R), stroke: 'url(#ringGrad)' });
+  fg.setAttribute('stroke-dasharray', String(C));
+  fg.style.strokeDashoffset = String(C * (1 - prev));
+  svg.append(defs, bg, fg);
+  ring.append(svg, el('span', 'ring-num', `${Math.round(frac * 100)}%`));
+  const text = el('div', 'hero-text');
+  text.append(el('p', 'hero-title', title), el('p', 'hero-sub', sub));
+  box.append(ring, text);
+  requestAnimationFrame(() => requestAnimationFrame(() => { fg.style.strokeDashoffset = String(C * (1 - frac)); }));
+  return box;
+}
+
 function chipText(done, day, today, due) {
   if (!due) return done ? 'Done (bonus)' : 'Off today';
   if (done) return day === today ? 'Done today' : 'Done';
@@ -282,7 +326,7 @@ function row(habit, kind, day = todayKey(), compact = false) {
     li.classList.toggle('is-done', done);
     li.append(el('span', 'habit-name', habit.name));
     if (!compact) {
-      li.append(el('span', 'streak', streakText(getStreak(habit))));
+      li.append(streakEl(habit));
       if (habit.schedule.length < 7) li.append(el('span', 'sched-note', scheduleText(habit.schedule)));
     }
     li.append(el('span', 'chip' + (done ? ' chip-done' : ''), chipText(done, day, today, due)));
@@ -294,9 +338,10 @@ function row(habit, kind, day = todayKey(), compact = false) {
   const label = el('label', 'habit-name', habit.name);
   label.htmlFor = cb.id;
   li.append(cb, label);
-  if (!compact) li.append(el('span', 'streak', streakText(getStreak(habit))));
+  if (!compact) li.append(streakEl(habit));
 
   const mineDone = habit.doneBy[me].includes(day);
+  const actions = el('div', 'actions');
   if (kind === 'shared') {
     const theirDone = habit.doneBy[partner].includes(day);
     li.classList.toggle('is-done', mineDone && theirDone);
@@ -305,7 +350,7 @@ function row(habit, kind, day = todayKey(), compact = false) {
       ? 'Done together'
       : `You: ${mineDone ? 'done' : 'not yet'} · ${partnerName()}: ${theirDone ? 'done' : 'not yet'}`;
     li.append(status);
-    if (!theirDone && due && day === today) li.append(nudgeButton(habit));
+    if (!theirDone && due && day === today) actions.append(nudgeButton(habit));
   } else {
     li.classList.toggle('is-done', mineDone);
   }
@@ -317,9 +362,10 @@ function row(habit, kind, day = todayKey(), compact = false) {
     sched.setAttribute('aria-label', `Change days for ${habit.name}. Now: ${scheduleText(habit.schedule)}`);
     sched.setAttribute('aria-expanded', editingId === habit.id ? 'true' : 'false');
     sched.addEventListener('click', () => { editingId = editingId === habit.id ? null : habit.id; renderList(); });
-    li.append(sched, deleteButton(habit));
-    if (editingId === habit.id) li.append(dayEditor(habit));
+    actions.append(sched, deleteButton(habit));
   }
+  if (actions.children.length) li.append(actions);
+  if (!compact && editingId === habit.id) li.append(dayEditor(habit));
   return li;
 }
 
@@ -338,6 +384,16 @@ function renderHabits(kind) {
   const due = habits.filter((h) => isScheduled(h, today));
   const off = habits.filter((h) => !isScheduled(h, today));
   if (due.length) {
+    const doneNow = (h) => (kind === 'theirs' ? h.doneBy[partnerOf(me)].includes(today)
+      : kind === 'shared' ? h.doneBy.boubacar.includes(today) && h.doneBy.nawel.includes(today)
+        : h.doneBy[me].includes(today));
+    const done = due.filter(doneNow).length;
+    const who = kind === 'theirs' ? `${partnerName()} has` : 'You have';
+    const title = done === due.length ? 'All done' : `${done} of ${due.length} done`;
+    const sub = done === due.length
+      ? (kind === 'shared' ? 'Done together. Nice work.' : 'Nice work today.')
+      : done === 0 ? `${who} ${due.length} to go today.` : 'Keep going, you are on a roll.';
+    listEl.append(heroCard(tab, done, due.length, title, sub));
     const ul = el('ul', 'habit-list');
     for (const h of due) ul.append(row(h, kind));
     listEl.append(ul);
@@ -427,6 +483,12 @@ function renderList() {
   if (!board) {
     listEl.append(el('p', 'empty', 'Loading…'));
     return;
+  }
+  if (enter) {
+    enter = false;
+    const target = listEl;
+    target.classList.add('enter');
+    setTimeout(() => target.classList.remove('enter'), 1000);
   }
   if (tab === 'calendar') renderCalendar();
   else renderHabits(tab === 'me' ? 'mine' : tab === 'shared' ? 'shared' : 'theirs');
@@ -557,6 +619,7 @@ function buildReminders() {
 }
 
 function renderTab() {
+  enter = true;
   view.textContent = '';
   for (const b of tabbar.querySelectorAll('[data-tab]')) {
     if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page');
@@ -592,7 +655,11 @@ function showHabits(who) {
   appEl.hidden = false;
   title.textContent = `${NAMES[who]}'s habits`;
   document.title = `${NAMES[who]}'s habits`;
-  $('partner-tab').textContent = partnerName();
+  $('partner-tab').querySelector('.tab-label').textContent = partnerName();
+  const hour = new Date().getHours();
+  $('hello').textContent = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  drawSprite($('avatar'), SPRITES[who], 0);
+  for (const k of Object.keys(lastFrac)) delete lastFrac[k];
   clearError();
   renderNudges();
   renderTab();
