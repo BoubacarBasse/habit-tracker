@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient.js';
-import { todayKey, shift } from './streaks.js';
+import { todayKey, shift, ALL_WEEK } from './streaks.js';
 
 export const OWNERS = ['boubacar', 'nawel'];
 export const NAMES = { boubacar: 'Boubacar', nawel: 'Nawel' };
@@ -50,6 +50,13 @@ function daysFor(owner, doneBy) {
   return doneBy.boubacar.filter((d) => other.has(d));
 }
 
+// Weekdays 0-6 (Sunday = 0), sorted and unique. Anything unusable means "every day".
+export function cleanDays(days) {
+  if (!Array.isArray(days)) return [...ALL_WEEK];
+  const list = [...new Set(days)].filter((d) => Number.isInteger(d) && d >= 0 && d <= 6).sort();
+  return list.length ? list : [...ALL_WEEK];
+}
+
 function toHabit(row, doneBy) {
   return {
     id: row.id,
@@ -57,6 +64,7 @@ function toHabit(row, doneBy) {
     name: row.name,
     createdAt: row.created_at,
     shared: row.owner === 'both',
+    schedule: cleanDays(row.days),
     doneBy,
     days: daysFor(row.owner, doneBy),
   };
@@ -105,7 +113,7 @@ async function fetchCheckins(since) {
 export async function loadBoard(me, today = todayKey()) {
   const since = shift(today, -HISTORY_DAYS);
   const [habitRows, checkinRows] = await Promise.all([
-    run(db().from('habits').select('id, owner, name, created_at').order('created_at', { ascending: true })),
+    run(db().from('habits').select('id, owner, name, days, created_at').order('created_at', { ascending: true })),
     fetchCheckins(since),
   ]);
   const all = buildHabits(habitRows, checkinRows);
@@ -120,15 +128,22 @@ export async function loadBoard(me, today = todayKey()) {
 }
 
 // ---------------------------------------------------------------- writes
-export async function addHabit(owner, name) {
+export async function addHabit(owner, name, days = ALL_WEEK) {
   if (![...OWNERS, 'both'].includes(owner)) throw new Error('Unknown person.');
   const trimmed = typeof name === 'string' ? name.trim() : '';
   if (!trimmed) throw new Error('Habit name cannot be empty');
   if (trimmed.length > MAX_NAME) throw new Error(`Habit name must be at most ${MAX_NAME} characters`);
+  if (!Array.isArray(days) || !days.length) throw new Error('Pick at least one day.');
   const row = await run(
-    db().from('habits').insert({ owner, name: trimmed }).select('id, owner, name, created_at').single(),
+    db().from('habits').insert({ owner, name: trimmed, days: cleanDays(days) })
+      .select('id, owner, name, days, created_at').single(),
   );
   return toHabit(row, { boubacar: [], nawel: [] });
+}
+
+export async function setHabitDays(id, days) {
+  if (!Array.isArray(days) || !days.length) throw new Error('Pick at least one day.');
+  await run(db().from('habits').update({ days: cleanDays(days) }).eq('id', id));
 }
 
 export async function deleteHabit(id) {
@@ -161,4 +176,32 @@ export async function listNudges(me) {
 
 export async function markNudgesRead(me) {
   await run(db().from('nudges').update({ read: true }).eq('to_owner', me).eq('read', false));
+}
+
+// ---------------------------------------------------------------- text reminders
+// Turns what someone typed into +15551234567 form. A 10-digit number is assumed to be US/Canada.
+// Returns null for empty input (which turns reminders off) and throws for anything unusable.
+export function normalizePhone(input) {
+  const raw = typeof input === 'string' ? input.trim() : '';
+  if (!raw) return null;
+  const digits = raw.replace(/\D/g, '');
+  let e164;
+  if (raw.startsWith('+')) e164 = `+${digits}`;
+  else if (digits.length === 10) e164 = `+1${digits}`;
+  else if (digits.length === 11 && digits.startsWith('1')) e164 = `+${digits}`;
+  else e164 = '';
+  if (!/^\+[1-9][0-9]{7,14}$/.test(e164)) {
+    throw new Error('Enter a phone number like 555 123 4567, or with a country code like +33 6 12 34 56 78.');
+  }
+  return e164;
+}
+
+// The browser can save a number but never read one back, so callers keep their own "saved" flag.
+export async function savePhone(who, phone, remind = true) {
+  if (!OWNERS.includes(who)) throw new Error('Unknown person.');
+  const value = normalizePhone(phone);
+  let tz = 'America/New_York';
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz; } catch { /* keep default */ }
+  await run(db().from('profiles').update({ phone: value, remind: remind && !!value, tz }).eq('owner', who));
+  return value;
 }

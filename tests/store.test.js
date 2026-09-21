@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   setClient, buildHabits, applyCheck, loadBoard, addHabit, deleteHabit, setChecked,
+  setHabitDays, cleanDays, normalizePhone, savePhone,
   sendNudge, listNudges, markNudgesRead, partnerOf, NETWORK_MSG,
 } from '../src/store.js';
 import { getStreak, shift } from '../src/streaks.js';
@@ -185,5 +186,73 @@ describe('partnerOf', () => {
   it('flips between the two people', () => {
     expect(partnerOf('boubacar')).toBe('nawel');
     expect(partnerOf('nawel')).toBe('boubacar');
+  });
+});
+
+describe('schedule', () => {
+  let fake;
+  beforeEach(() => { fake = makeFakeClient(); setClient(fake); });
+
+  it('cleanDays sorts, dedupes and defaults to every day', () => {
+    expect(cleanDays([5, 1, 1, 3])).toEqual([1, 3, 5]);
+    expect(cleanDays(undefined)).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    expect(cleanDays([9, -1, 'x'])).toEqual([0, 1, 2, 3, 4, 5, 6]);
+  });
+  it('a new habit defaults to every day and can be limited to some weekdays', async () => {
+    const all = await addHabit('boubacar', 'Run');
+    expect(all.schedule).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    const some = await addHabit('boubacar', 'Gym', [5, 1, 3]);
+    expect(some.schedule).toEqual([1, 3, 5]);
+    expect(fake.tables.habits[1].days).toEqual([1, 3, 5]);
+  });
+  it('rejects an empty schedule', async () => {
+    await expect(addHabit('boubacar', 'Gym', [])).rejects.toThrow('at least one day');
+  });
+  it('loadBoard returns each habit schedule', async () => {
+    await addHabit('boubacar', 'Gym', [1, 3]);
+    const board = await loadBoard('boubacar');
+    expect(board.mine[0].schedule).toEqual([1, 3]);
+  });
+  it('setHabitDays updates the schedule', async () => {
+    const h = await addHabit('nawel', 'Yoga');
+    await setHabitDays(h.id, [2, 4]);
+    expect(fake.tables.habits[0].days).toEqual([2, 4]);
+    await expect(setHabitDays(h.id, [])).rejects.toThrow('at least one day');
+  });
+});
+
+describe('phone reminders', () => {
+  let fake;
+  beforeEach(() => { fake = makeFakeClient(); setClient(fake); });
+
+  it('normalizes common ways of typing a number', () => {
+    expect(normalizePhone('(555) 123-4567')).toBe('+15551234567');
+    expect(normalizePhone('1 555 123 4567')).toBe('+15551234567');
+    expect(normalizePhone('+33 6 12 34 56 78')).toBe('+33612345678');
+    expect(normalizePhone('   ')).toBeNull();
+  });
+  it('rejects numbers that are too short or malformed', () => {
+    expect(() => normalizePhone('12345')).toThrow('phone number');
+    expect(() => normalizePhone('abc')).toThrow('phone number');
+    expect(() => normalizePhone('+0123456789')).toThrow('phone number');
+  });
+  it('saves the number for the right person only', async () => {
+    await savePhone('nawel', '555 123 4567');
+    const nawel = fake.tables.profiles.find((p) => p.owner === 'nawel');
+    const boubacar = fake.tables.profiles.find((p) => p.owner === 'boubacar');
+    expect(nawel.phone).toBe('+15551234567');
+    expect(nawel.remind).toBe(true);
+    expect(boubacar.phone).toBeNull();
+  });
+  it('clearing the number turns reminders off', async () => {
+    await savePhone('nawel', '555 123 4567');
+    await savePhone('nawel', '');
+    const nawel = fake.tables.profiles.find((p) => p.owner === 'nawel');
+    expect(nawel.phone).toBeNull();
+    expect(nawel.remind).toBe(false);
+  });
+  it('maps a network failure to the friendly message', async () => {
+    fake.failNext = { throw: true };
+    await expect(savePhone('nawel', '555 123 4567')).rejects.toThrow(NETWORK_MSG);
   });
 });

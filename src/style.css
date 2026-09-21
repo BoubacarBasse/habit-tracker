@@ -8,6 +8,7 @@
   --accent: #4f46e5;
   --accent-text: #ffffff;
   --danger: #b42318;
+  --partner: #b45309;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -19,6 +20,7 @@
     --accent: #8b85ff;
     --accent-text: #0f1117;
     --danger: #ff8a80;
+    --partner: #fbbf24;
   }
 }
 * { box-sizing: border-box; }
@@ -33,7 +35,7 @@ h1 { font-size: 1.75rem; margin: 1rem 0; }
 h2 { font-size: 1.15rem; margin: 1.5rem 0 .5rem; }
 .add-form label { display: block; font-weight: 600; margin-bottom: .25rem; }
 .row { display: flex; gap: .5rem; }
-input[type="text"] {
+input[type="text"], input[type="tel"] {
   flex: 1; min-width: 0; padding: .6rem .75rem; font: inherit;
   color: var(--text); background: var(--card);
   border: 1px solid var(--border); border-radius: .5rem;
@@ -127,16 +129,77 @@ body.picking { background: #000; }
 .tabbar {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
   width: 100%; max-width: 36rem; z-index: 10;
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(5, 1fr);
   background: var(--card); border-top: 1px solid var(--border);
   padding-bottom: env(safe-area-inset-bottom);
 }
 .tabbar button {
   border: 0; border-radius: 0; background: transparent; color: var(--muted);
-  min-height: 3.5rem; padding: .5rem .25rem; font-size: .95rem;
+  min-height: 3.5rem; padding: .5rem .1rem; font-size: .82rem;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .tabbar button[aria-current="page"] { color: var(--accent); font-weight: 700; box-shadow: inset 0 3px 0 var(--accent); }
+
+
+/* Weekly schedule */
+.days-row { margin-top: .6rem; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .75rem; }
+.days-label { font-weight: 600; font-size: .9rem; }
+.days { display: flex; gap: .3rem; }
+.day { position: relative; display: block; }
+.day input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.day span {
+  display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: .9rem;
+}
+.day input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 700; }
+.day input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
+.quick { display: flex; gap: .4rem; }
+.quick button, .cal-head button { padding: .3rem .7rem; }
+button.sched { padding: .3rem .6rem; font-size: .85rem; }
+.sched-note { color: var(--muted); font-size: .8rem; }
+.day-editor { flex-basis: 100%; display: grid; gap: .5rem; padding-top: .5rem; border-top: 1px solid var(--border); }
+.off-today { margin-top: 1rem; }
+.off-today summary, .reminders summary { cursor: pointer; color: var(--muted); padding: .4rem 0; }
+.off-today .habit-list { margin-top: .5rem; }
+.muted { color: var(--muted); font-size: .9rem; }
+
+/* Reminders */
+.reminders { margin-top: 1.5rem; padding: .25rem .8rem .8rem; background: var(--card); border: 1px solid var(--border); border-radius: .5rem; }
+.phone-form label { display: block; font-weight: 600; margin-bottom: .25rem; }
+.phone-form > button { margin-top: .5rem; }
+.error.ok { color: var(--accent); }
+
+/* Calendar */
+.cal-head { display: flex; align-items: center; gap: .5rem; margin-top: .5rem; }
+.cal-title { flex: 1; margin: 0; text-align: center; font-size: 1.1rem; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin-top: .75rem; }
+.cal-dow { text-align: center; font-size: .75rem; color: var(--muted); padding-bottom: .15rem; }
+.cal-day {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 3.6rem;
+  padding: .3rem .1rem; background: var(--card); color: var(--text);
+  border: 1px solid var(--border); border-radius: .4rem;
+}
+.cal-day.out { opacity: .45; }
+.cal-day.is-today .cal-num { color: var(--accent); font-weight: 700; text-decoration: underline; }
+.cal-day.is-selected { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+.cal-num { font-size: .9rem; }
+.cal-marks { display: flex; gap: 2px; min-height: 1.1rem; }
+.mk {
+  min-width: 1.1rem; height: 1.1rem; padding: 0 .2rem; border-radius: 999px; font-size: .68rem; line-height: 1;
+  display: inline-grid; place-items: center; border: 1.5px solid transparent;
+}
+.mk:empty { visibility: hidden; }
+.mk-me { border-color: var(--accent); color: var(--accent); }
+.mk-them { border-color: var(--partner); color: var(--partner); }
+.mk-me.is-part { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+.mk-them.is-part { background: color-mix(in srgb, var(--partner) 30%, transparent); }
+.mk-me.is-done { background: var(--accent); color: var(--accent-text); }
+.mk-them.is-done { background: var(--partner); color: var(--bg); }
+.cal-legend { color: var(--muted); font-size: .8rem; margin: .6rem 0 0; }
+.cal-legend .mk { padding: 0 .5rem; min-width: 0; height: auto; line-height: 1.4; font-size: .75rem; }
+.day-panel { margin-top: 1rem; }
+.day-panel h3 { margin: 0 0 .25rem; font-size: 1.05rem; }
+.day-panel h4 { margin: .75rem 0 .35rem; font-size: .85rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 
 /* The hidden attribute must always win over display rules above. */
 [hidden] { display: none !important; }

@@ -1,6 +1,10 @@
 // Minimal in-memory stand-in for the Supabase client: just the calls store.js makes.
 export function makeFakeClient(seed = {}) {
-  const tables = { habits: [], checkins: [], nudges: [], ...seed };
+  const tables = {
+    habits: [], checkins: [], nudges: [],
+    profiles: [{ owner: 'boubacar', phone: null, remind: true, tz: 'America/New_York' }, { owner: 'nawel', phone: null, remind: true, tz: 'America/New_York' }],
+    ...seed,
+  };
   let counter = 0;
   const fake = { tables, failNext: null, calls: [] };
 

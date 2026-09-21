@@ -6,8 +6,9 @@ for a day when *both* have checked them.
 
 ## How it works
 - **Character select:** pixel-art picker (`src/views/picker.js`, `src/views/characters.js`). No login. The choice is remembered on that device (`localStorage` key `ht:who`).
-- **Screens:** Me (my habits), Shared (habits you both must check), Partner (their habits, read-only, with a Nudge button), Switch.
-- **Streaks:** consecutive days, resetting at local midnight. If today isn't done yet, yesterday's streak still shows. A shared habit's streak counts days *both* checked. Logic: `src/streaks.js`.
+- **Screens:** Me (my habits), Shared (habits you both must check), Calendar (a month view of both people's plans, tap a day to see and check things off), Partner (their habits, read-only, with a Nudge button), Switch.
+- **Weekly schedule:** every habit repeats on the weekdays you choose (default every day). Habits not scheduled today sit under "Not scheduled today"; the calendar shows them on their days. Change a habit's days with the button on its row.
+- **Streaks:** consecutive *scheduled* days, resetting at local midnight. Days a habit isn't scheduled neither break nor add to the streak. If today isn't done yet, the streak so far still shows. A shared habit's streak counts days *both* checked. Logic: `src/streaks.js`.
 - **Data:** Supabase (Postgres) through the public anon key. Data layer: `src/store.js`. Schema and access rules: `supabase/migrations/0001_init.sql`.
 - **Offline:** the app shell is cached by a service worker (`public/sw.js`), but habits need a connection.
 
@@ -30,7 +31,7 @@ Get the two values from Supabase: Project Settings, then API. Use the anon (publ
 never the service_role key.
 
 ## Set up the database
-Run `supabase/migrations/0001_init.sql` once in Supabase (SQL Editor, New query, paste, Run).
+Run `supabase/migrations/0001_init.sql`, then `supabase/migrations/0002_schedule_and_phone.sql`, once each in Supabase (SQL Editor, New query, paste, Run). The second adds weekly schedules and a private table for phone numbers (text reminders are not switched on yet).
 
 ## Deploy (Netlify)
 Build command `npm run build`, publish directory `dist` (already in `netlify.toml`). Set the

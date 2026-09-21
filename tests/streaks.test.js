@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { todayKey, shift, isDone, getStreak } from '../src/streaks.js';
+import { todayKey, shift, isDone, getStreak, isScheduled, weekdayOf } from '../src/streaks.js';
 
 const habit = (days) => ({ days });
 
@@ -55,5 +55,51 @@ describe('getStreak', () => {
     const days = [];
     for (let i = 0; i < 45; i++) days.push(shift(today, -i));
     expect(getStreak(habit(days), today)).toBe(45);
+  });
+});
+
+// 2025-06-16 is a Monday.
+describe('weekdayOf / isScheduled', () => {
+  it('finds the weekday of a local date', () => {
+    expect(weekdayOf('2025-06-16')).toBe(1);
+    expect(weekdayOf('2025-06-15')).toBe(0);
+  });
+  it('treats a habit with no schedule as every day', () => {
+    expect(isScheduled({ days: [] }, '2025-06-15')).toBe(true);
+    expect(isScheduled({ days: [], schedule: [] }, '2025-06-15')).toBe(true);
+  });
+  it('checks the weekday against the schedule', () => {
+    const mwf = { days: [], schedule: [1, 3, 5] };
+    expect(isScheduled(mwf, '2025-06-16')).toBe(true);
+    expect(isScheduled(mwf, '2025-06-17')).toBe(false);
+  });
+});
+
+describe('getStreak with a weekly schedule', () => {
+  const mwf = (days) => ({ days, schedule: [1, 3, 5] });
+
+  it('skips unscheduled days without breaking the streak', () => {
+    // Mon 16, Fri 13, Wed 11 done; Tue/Thu/weekend are not scheduled.
+    expect(getStreak(mwf(['2025-06-16', '2025-06-13', '2025-06-11']), '2025-06-16')).toBe(3);
+  });
+  it('a missed scheduled day ends the streak', () => {
+    // Fri 13 was missed.
+    expect(getStreak(mwf(['2025-06-16', '2025-06-11']), '2025-06-16')).toBe(1);
+  });
+  it('today scheduled but not done yet keeps the earlier streak', () => {
+    expect(getStreak(mwf(['2025-06-13', '2025-06-11']), '2025-06-16')).toBe(2);
+  });
+  it('today unscheduled keeps the streak alive', () => {
+    // Tuesday 17: nothing due today, Monday was done.
+    expect(getStreak(mwf(['2025-06-16', '2025-06-13']), '2025-06-17')).toBe(2);
+  });
+  it('a bonus check-in on an unscheduled day is not counted', () => {
+    expect(getStreak(mwf(['2025-06-17', '2025-06-16']), '2025-06-17')).toBe(1);
+  });
+  it('a habit with no history has no streak', () => {
+    expect(getStreak(mwf([]), '2025-06-16')).toBe(0);
+  });
+  it('an every-day habit still behaves as before', () => {
+    expect(getStreak({ days: ['2025-06-16', '2025-06-15', '2025-06-14'] }, '2025-06-16')).toBe(3);
   });
 });
