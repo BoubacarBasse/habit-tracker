@@ -2,7 +2,6 @@
 export function makeFakeClient(seed = {}) {
   const tables = {
     habits: [], checkins: [], nudges: [],
-    profiles: [{ owner: 'boubacar', phone: null, remind: true, tz: 'America/New_York' }, { owner: 'nawel', phone: null, remind: true, tz: 'America/New_York' }],
     ...seed,
   };
   let counter = 0;

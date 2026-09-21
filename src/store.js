@@ -177,31 +177,3 @@ export async function listNudges(me) {
 export async function markNudgesRead(me) {
   await run(db().from('nudges').update({ read: true }).eq('to_owner', me).eq('read', false));
 }
-
-// ---------------------------------------------------------------- text reminders
-// Turns what someone typed into +15551234567 form. A 10-digit number is assumed to be US/Canada.
-// Returns null for empty input (which turns reminders off) and throws for anything unusable.
-export function normalizePhone(input) {
-  const raw = typeof input === 'string' ? input.trim() : '';
-  if (!raw) return null;
-  const digits = raw.replace(/\D/g, '');
-  let e164;
-  if (raw.startsWith('+')) e164 = `+${digits}`;
-  else if (digits.length === 10) e164 = `+1${digits}`;
-  else if (digits.length === 11 && digits.startsWith('1')) e164 = `+${digits}`;
-  else e164 = '';
-  if (!/^\+[1-9][0-9]{7,14}$/.test(e164)) {
-    throw new Error('Enter a phone number like 555 123 4567, or with a country code like +33 6 12 34 56 78.');
-  }
-  return e164;
-}
-
-// The browser can save a number but never read one back, so callers keep their own "saved" flag.
-export async function savePhone(who, phone, remind = true) {
-  if (!OWNERS.includes(who)) throw new Error('Unknown person.');
-  const value = normalizePhone(phone);
-  let tz = 'America/New_York';
-  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz; } catch { /* keep default */ }
-  await run(db().from('profiles').update({ phone: value, remind: remind && !!value, tz }).eq('owner', who));
-  return value;
-}

@@ -1,6 +1,6 @@
 import {
   NAMES, partnerOf, loadBoard, addHabit, deleteHabit, setChecked, applyCheck, setHabitDays,
-  sendNudge, listNudges, markNudgesRead, savePhone,
+  sendNudge, listNudges, markNudgesRead,
 } from './store.js';
 import { todayKey, shift, getStreak, isScheduled, ALL_WEEK } from './streaks.js';
 import { showPicker } from './views/picker.js';
@@ -8,13 +8,11 @@ import { drawSprite } from './views/characters.js';
 import { renderMonth, dayItems, monthStart, addMonths, monthLabel, dayLabel } from './views/calendar.js';
 
 const WHO_KEY = 'ht:who';
-const PHONE_KEY = 'ht:phone:'; // + owner; holds only the last 4 digits, for display
 const REFRESH_MS = 30000;
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const SPRITES = { boubacar: 'man', nawel: 'woman' };
-const REMINDERS_ENABLED = true;
 const EDIT_BACK_DAYS = 7; // the database only accepts check-ins this far back
 const $ = (id) => document.getElementById(id);
 
@@ -292,7 +290,7 @@ function heroCard(key, done, total, title, sub) {
   const svg = svgEl('svg', { viewBox: '0 0 110 110', 'aria-hidden': 'true' });
   const defs = svgEl('defs', {});
   const grad = svgEl('linearGradient', { id: 'ringGrad', x1: '0', y1: '0', x2: '1', y2: '1' });
-  grad.append(svgEl('stop', { offset: '0', 'stop-color': '#ff7a3d' }), svgEl('stop', { offset: '1', 'stop-color': '#ffb02e' }));
+  grad.append(svgEl('stop', { offset: '0', 'stop-color': '#3b82f6' }), svgEl('stop', { offset: '1', 'stop-color': '#ff5c6c' }));
   defs.append(grad);
   const bg = svgEl('circle', { class: 'ring-bg', cx: '55', cy: '55', r: String(R) });
   const fg = svgEl('circle', { class: 'ring-fg', cx: '55', cy: '55', r: String(R), stroke: 'url(#ringGrad)' });
@@ -534,6 +532,7 @@ function buildForm() {
     try {
       const habit = await addHabit(shared ? 'both' : me, input.value, chips.get());
       input.value = '';
+      form.closest('details')?.removeAttribute('open');
       if (!isScheduled(habit, todayKey())) offOpen = true; // so a habit added for other days is not hidden
       if (board) {
         board[shared ? 'shared' : 'mine'].push(habit);
@@ -553,68 +552,11 @@ function buildForm() {
   return form;
 }
 
-// Text reminders. The database never gives a phone number back, so only the last 4 digits are remembered here.
-function buildReminders() {
-  const owner = me;
-  let last4 = null;
-  try { last4 = localStorage.getItem(PHONE_KEY + owner); } catch { /* private mode */ }
-  const box = el('details', 'reminders');
-  const summary = el('summary', null, last4 ? `Text reminders: on (•••• ${last4})` : 'Text reminders: off');
-  const note = el('p', 'muted', 'Get a text around 8am with what is on your list today, and when your partner nudges you. Your number is stored privately and cannot be read back, so type it again to change it.');
-  const form = el('form', 'phone-form');
-  form.noValidate = true;
-  const label = el('label', null, 'Mobile number');
-  label.htmlFor = 'phone';
-  const input = el('input');
-  input.id = 'phone';
-  input.type = 'tel';
-  input.autocomplete = 'tel';
-  input.placeholder = '555 123 4567';
-  input.maxLength = 20;
-  const save = el('button', null, 'Save');
-  save.type = 'submit';
-  const off = el('button', 'ghost', 'Turn off');
-  off.type = 'button';
-  const inputRow = el('div', 'row');
-  inputRow.append(input, save);
-  const msg = el('p', 'error');
-  msg.setAttribute('role', 'alert');
-  form.append(label, inputRow, off, msg);
-  box.append(summary, note, form);
-
-  const remember = (digits) => {
-    try {
-      if (digits) localStorage.setItem(PHONE_KEY + owner, digits);
-      else localStorage.removeItem(PHONE_KEY + owner);
-    } catch { /* private mode */ }
-    summary.textContent = digits ? `Text reminders: on (•••• ${digits})` : 'Text reminders: off';
-  };
-  const persist = async (value) => {
-    msg.textContent = '';
-    msg.classList.remove('ok');
-    input.removeAttribute('aria-invalid');
-    save.disabled = true;
-    off.disabled = true;
-    try {
-      const phone = await savePhone(owner, value);
-      remember(phone ? phone.slice(-4) : null);
-      input.value = '';
-      msg.textContent = phone ? 'Saved. You will get a text around 8am and when nudged.' : 'Reminders are off.';
-      msg.classList.add('ok');
-    } catch (err) {
-      msg.textContent = err.message;
-      input.setAttribute('aria-invalid', 'true');
-    } finally {
-      save.disabled = false;
-      off.disabled = false;
-    }
-  };
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (!input.value.trim()) { msg.textContent = 'Enter your number first.'; input.focus(); return; }
-    persist(input.value);
-  });
-  off.addEventListener('click', () => persist(''));
+// Collapsed by default so the form stays out of the way at the bottom of the list.
+function buildAdd() {
+  const box = el('details', 'add-habit');
+  box.append(el('summary', null, tab === 'shared' ? '+ Add shared habit' : '+ Add habit'), buildForm());
+  box.addEventListener('toggle', () => { if (box.open) box.querySelector('#habit-name')?.focus(); });
   return box;
 }
 
@@ -635,8 +577,7 @@ function renderTab() {
   listEl = el('div', 'list');
   if (tab === 'partner') view.append(h2, listEl);
   else if (tab === 'calendar') view.append(listEl);
-  else view.append(buildForm(), h2, listEl);
-  if (tab === 'me' && REMINDERS_ENABLED) view.append(buildReminders());
+  else view.append(h2, listEl, buildAdd());
   renderList();
 }
 
