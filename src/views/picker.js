@@ -2,8 +2,8 @@ import { drawSprite, SPRITE_W, SPRITE_H } from './characters.js';
 
 // Left sprite (briefcase) = Boubacar, right sprite (drumstick) = Nawel.
 const CHARACTERS = [
-  { owner: 'boubacar', sprite: 'man', plate: 'BRIEFCASE', name: 'Boubacar' },
-  { owner: 'nawel', sprite: 'woman', plate: 'DRUMSTICK', name: 'Nawel' },
+  { owner: 'boubacar', sprite: 'man', plate: 'MR. BASSE', name: 'Boubacar' },
+  { owner: 'nawel', sprite: 'woman', plate: 'NOUNOURS', name: 'Nawel' },
 ];
 const FRAME_MS = 340;
 
